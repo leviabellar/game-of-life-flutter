@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:vector_math/vector_math_64.dart' show Quad, Vector3;
 
 void main() {
   runApp(const MyApp());
@@ -16,73 +17,133 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const Scaffold(
+        body: _IVBuilderExample(),
+      ),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  final String title;
+class _IVBuilderExample extends StatefulWidget {
+  const _IVBuilderExample();
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<_IVBuilderExample> createState() => _IVBuilderExampleState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _IVBuilderExampleState extends State<_IVBuilderExample> {
+  static const double _cellWidth = 80.0;
+  static const double _cellHeight = 80.0;
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
+  // Returns the axis aligned bounding box for the given Quad, which might not
+  // be axis aligned.
+  Rect axisAlignedBoundingBox(Quad quad) {
+    double xMin = quad.point0.x;
+    double xMax = quad.point0.x;
+    double yMin = quad.point0.y;
+    double yMax = quad.point0.y;
+    for (final Vector3 point in <Vector3>[
+      quad.point1,
+      quad.point2,
+      quad.point3,
+    ]) {
+      if (point.x < xMin) {
+        xMin = point.x;
+      } else if (point.x > xMax) {
+        xMax = point.x;
+      }
+
+      if (point.y < yMin) {
+        yMin = point.y;
+      } else if (point.y > yMax) {
+        yMax = point.y;
+      }
+    }
+
+    return Rect.fromLTRB(xMin, yMin, xMax, yMax);
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+    return Center(
+      child: LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
+          return InteractiveViewer.builder(
+            boundaryMargin: const EdgeInsets.all(double.infinity),
+            builder: (BuildContext context, Quad viewport) {
+              print('viewport 0 -> ${viewport.point0}');
+              print('viewport 1 -> ${viewport.point1}');
+              print('viewport 2 -> ${viewport.point2}');
+              print('viewport 3 -> ${viewport.point3}');
+
+              return _TableBuilder(
+                cellWidth: _cellWidth,
+                cellHeight: _cellHeight,
+                viewport: axisAlignedBoundingBox(viewport),
+                builder: (BuildContext context, int row, int column) {
+                  return Container(
+                    height: _cellHeight,
+                    width: _cellWidth,
+                    color: row % 2 + column % 2 == 1
+                        ? Colors.white
+                        : Colors.grey.withOpacity(0.1),
+                    child: Align(
+                      child: Text('$row x $column'),
+                    ),
+                  );
+                },
+              );
+            },
+          );
+        },
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
-        ),
+    );
+  }
+}
+
+typedef _CellBuilder = Widget Function(
+    BuildContext context, int row, int column);
+
+class _TableBuilder extends StatelessWidget {
+  const _TableBuilder({
+    required this.cellWidth,
+    required this.cellHeight,
+    required this.viewport,
+    required this.builder,
+  });
+
+  final double cellWidth;
+  final double cellHeight;
+  final Rect viewport;
+  final _CellBuilder builder;
+
+  @override
+  Widget build(BuildContext context) {
+    final int firstRow = (viewport.top / cellHeight).floor();
+    final int lastRow = (viewport.bottom / cellHeight).ceil();
+    final int firstCol = (viewport.left / cellWidth).floor();
+    final int lastCol = (viewport.right / cellWidth).ceil();
+
+    // This will create and render exactly (lastRow - firstRow) * (lastCol - firstCol) cells
+
+    return SizedBox(
+      // Stack needs constraints, even though we then Clip.none outside of them.
+      // InteractiveViewer.builder always sets constrained to false, giving infinite constraints to the child.
+      // See: https://api.flutter.dev/flutter/widgets/InteractiveViewer/constrained.html
+      width: 1,
+      height: 1,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: <Widget>[
+          for (int row = firstRow; row < lastRow; row++)
+            for (int col = firstCol; col < lastCol; col++)
+              Positioned(
+                left: col * cellWidth,
+                top: row * cellHeight,
+                child: builder(context, row, col),
+              ),
+        ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }

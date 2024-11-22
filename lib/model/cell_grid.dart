@@ -8,8 +8,27 @@ class CellGrid {
     [-1, -1], [0, -1], [1, -1],
   ];
 
-  CellGrid(int length, int width) {
-    _cells = [];
+  CellGrid(int topLeftX, int topLeftY, int bottomRightX, int bottomRightY) {
+    int rows = bottomRightY - topLeftY + 1;
+    int cols = bottomRightX - topLeftX + 1; // Instantiate the 2D list with the desired dimensions
+
+    _cells = List.generate(
+      rows, (i) => List.generate(
+          cols, (j) => Cell.dead(
+          cellGrid: this,
+          x: topLeftX + j,
+          y: topLeftY + i,
+        )
+      )
+    );
+  }
+
+  void addCellAt({required int x, required int y}) {
+    _cells[x][y] = Cell.dead(cellGrid: this, x: x, y: y);
+  }
+
+  void reviveCellAt({required int x, required int y}) {
+    _cells[x][y].revive();
   }
 
   int countAliveNeighbors(Cell cell) {

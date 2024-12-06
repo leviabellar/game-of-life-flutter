@@ -9,6 +9,17 @@ class CellBuilder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Map<String, bool> cellStatus = {};
+
+    void reviveCell(int x, int y) {
+      cellStatus['$x,$y'] = true;
+    }
+
+    bool toggleCell(int x, int y) {
+      cellStatus['$x,$y'] = !(cellStatus['$x,$y'] ?? false);
+      return cellStatus['$x,$y'] ?? false;
+    }
+
     return InteractiveViewer.builder(
       boundaryMargin: const EdgeInsets.all(double.infinity),
       builder: (context, viewport) {
@@ -30,19 +41,24 @@ class CellBuilder extends StatelessWidget {
         // Then create the cells
         List.generate(row + 1, (i) {
           List.generate(column + 1, (j) {
+            final x = leftMost + j;
+            final y = topMost + i;
             cells.add(
               Cell(
-                x: leftMost + j,
-                y: topMost + i,
+                x: x,
+                y: y,
+                isAlive: cellStatus['$x,$y'] ?? false,
                 size: size,
+                onTap: toggleCell,
+                key: ValueKey('$x,$y'),
               ),
             );
           });
         },);
 
         return SizedBox(
-          height: 1,
-          width: 1,
+          height: double.maxFinite,
+          width: double.maxFinite,
           child: Stack(
             clipBehavior: Clip.none,
             children: cells,

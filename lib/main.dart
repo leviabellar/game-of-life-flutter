@@ -13,7 +13,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Game of Life',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
@@ -40,6 +40,7 @@ class _MyHomePageState extends State<MyHomePage> {
     [-1,  1], [0,  1], [1,  1],
   ];
 
+  // This is to update the cell status one step
   void step() {
     // First let us list all the cells that needs update
     final Set<String> cellsToUpdate = {};
@@ -87,10 +88,6 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-      ),
       body: Center(
         child: Column(
           children: [
@@ -99,14 +96,17 @@ class _MyHomePageState extends State<MyHomePage> {
                 cellStatus: cellStatus,
               ),
             ),
-            SizedBox(
-              height: 100,
-              child: ColoredBox(
-                color: Colors.grey,
-                child: Center(
-                  child: TextButton(
-                    onPressed: step,
-                    child: const Text('step'),
+            GestureDetector(
+              onTap: step,
+              child: const MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: SizedBox(
+                  height: 80,
+                  child: ColoredBox(
+                    color: Colors.black,
+                    child: Center(
+                      child: Icon(Icons.skip_next_outlined, color: Colors.white,),
+                    ),
                   ),
                 ),
               ),

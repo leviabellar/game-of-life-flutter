@@ -22,6 +22,7 @@ class Cell extends StatefulWidget {
 
 class _CellState extends State<Cell> {
   Color color = Colors.white;
+  bool hoverCell = false;
 
   @override
   initState() {
@@ -34,20 +35,45 @@ class _CellState extends State<Cell> {
     return Positioned(
       left: widget.x * widget.size,
       top: widget.y * widget.size,
-      child: GestureDetector(
-        onTap: () {
+      child: MouseRegion(
+        onEnter: (_) {
           setState(() {
-            color = widget.onTap(widget.x, widget.y) ? Colors.green : Colors.white;
+            hoverCell = true;
           });
         },
-        child: SizedBox(
-          height: widget.size,
-          width: widget.size,
-          child: ColoredBox(
-            color: color,
-            child: Center(
-              child: Text('${widget.x}, ${widget.y}', style: const TextStyle(fontSize: 8),),
-            ),
+        onExit: (_) {
+          setState(() {
+            hoverCell = false;
+          });
+        },
+        child: GestureDetector(
+          onTap: () {
+            setState(() {
+              color = widget.onTap(widget.x, widget.y) ? Colors.green : Colors.white;
+            });
+          },
+          child: Stack(
+            children: [
+              SizedBox(
+                height: widget.size,
+                width: widget.size,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    border: Border.all(color: const Color(0xFFF3F3F3)),
+                    color: color,
+                  ),
+                ),
+              ),
+
+              // For hover effect
+              if (hoverCell) Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.1),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),

@@ -5,16 +5,13 @@ import 'cell.dart';
 class CellBuilder extends StatelessWidget {
   const CellBuilder({
     super.key,
+    required this.cellStatus,
   });
+
+  final Map<String, bool> cellStatus;
 
   @override
   Widget build(BuildContext context) {
-    Map<String, bool> cellStatus = {};
-
-    void reviveCell(int x, int y) {
-      cellStatus['$x,$y'] = true;
-    }
-
     bool toggleCell(int x, int y) {
       cellStatus['$x,$y'] = !(cellStatus['$x,$y'] ?? false);
       return cellStatus['$x,$y'] ?? false;
@@ -50,7 +47,7 @@ class CellBuilder extends StatelessWidget {
                 isAlive: cellStatus['$x,$y'] ?? false,
                 size: size,
                 onTap: toggleCell,
-                key: ValueKey('$x,$y'),
+                key: ObjectKey('${cellStatus['$x, $y'] ?? false}-$x-$y'),
               ),
             );
           });

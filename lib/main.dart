@@ -33,6 +33,56 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  final Map<String, bool> cellStatus = {};
+  static const List<List<int>> neighborLocation = [
+    [-1, -1], [0, -1], [1, -1],
+    [-1,  0],          [1,  0],
+    [-1,  1], [0,  1], [1,  1],
+  ];
+
+  void step() {
+    // First let us list all the cells that needs update
+    final Set<String> cellsToUpdate = {};
+    for (final cell in cellStatus.keys) {
+      cellsToUpdate.add(cell);
+      for(final neighbor in neighborLocation) {
+        final x = int.parse(cell.split(',')[0]) + neighbor[0];
+        final y = int.parse(cell.split(',')[1]) + neighbor[1];
+        cellsToUpdate.add('$x,$y');
+      }
+    }
+
+    // Then let us decide the new status of each cell
+    final Map<String, bool> newCellStatus = {};
+    for (final cell in cellsToUpdate) {
+      final x = int.parse(cell.split(',')[0]);
+      final y = int.parse(cell.split(',')[1]);
+      final aliveNeighbors = neighborLocation.fold(0, (count, neighbor) {
+        final nx = x + neighbor[0];
+        final ny = y + neighbor[1];
+        return count + (cellStatus['$nx,$ny'] ?? false ? 1 : 0);
+      });
+      final alive = cellStatus[cell] ?? false;
+      if (alive) {
+        if (aliveNeighbors == 2 || aliveNeighbors == 3) {
+          newCellStatus[cell] = true;
+        } else {
+          newCellStatus.remove(cell);
+        }
+      } else {
+        if (aliveNeighbors == 3) {
+          newCellStatus[cell] = true;
+        }
+      }
+    }
+
+    // Finally let us update the cellStatus
+    cellStatus.clear();
+    setState(() {
+      cellStatus.addAll(newCellStatus);
+      print(cellStatus);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,18 +91,23 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
       ),
-      body: const Center(
+      body: Center(
         child: Column(
           children: [
             Expanded(
-              child: CellBuilder(),
+              child: CellBuilder(
+                cellStatus: cellStatus,
+              ),
             ),
             SizedBox(
               height: 100,
               child: ColoredBox(
-                color: Colors.black,
+                color: Colors.grey,
                 child: Center(
-                  child: Text('This is a black box'),
+                  child: TextButton(
+                    onPressed: step,
+                    child: const Text('step'),
+                  ),
                 ),
               ),
             ),

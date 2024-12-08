@@ -34,6 +34,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   final Map<String, bool> cellStatus = {};
+  final Map<String, bool> newCellStatus = {};
   static const List<List<int>> neighborLocation = [
     [-1, -1], [0, -1], [1, -1],
     [-1,  0],          [1,  0],
@@ -42,6 +43,16 @@ class _MyHomePageState extends State<MyHomePage> {
 
   // This is to update the cell status one step
   void step() {
+    // Finally let us update the cellStatus
+    cellStatus.clear();
+    setState(() {
+      cellStatus.addAll(newCellStatus);
+    });
+    getNextCellsStatus();
+  }
+
+  // This is to get the next cell status
+  void getNextCellsStatus() {
     // First let us list all the cells that needs update
     final Set<String> cellsToUpdate = {};
     for (final cell in cellStatus.keys) {
@@ -53,8 +64,8 @@ class _MyHomePageState extends State<MyHomePage> {
       }
     }
 
+    newCellStatus.clear();
     // Then let us decide the new status of each cell
-    final Map<String, bool> newCellStatus = {};
     for (final cell in cellsToUpdate) {
       final x = int.parse(cell.split(',')[0]);
       final y = int.parse(cell.split(',')[1]);
@@ -76,13 +87,6 @@ class _MyHomePageState extends State<MyHomePage> {
         }
       }
     }
-
-    // Finally let us update the cellStatus
-    cellStatus.clear();
-    setState(() {
-      cellStatus.addAll(newCellStatus);
-      print(cellStatus);
-    });
   }
 
   @override
@@ -94,6 +98,7 @@ class _MyHomePageState extends State<MyHomePage> {
             Expanded(
               child: CellBuilder(
                 cellStatus: cellStatus,
+                updateCellStatus: getNextCellsStatus,
               ),
             ),
             GestureDetector(

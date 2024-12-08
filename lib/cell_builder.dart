@@ -6,14 +6,17 @@ class CellBuilder extends StatelessWidget {
   const CellBuilder({
     super.key,
     required this.cellStatus,
+    required this.updateCellStatus,
   });
 
   final Map<String, bool> cellStatus;
+  final Function updateCellStatus;
 
   @override
   Widget build(BuildContext context) {
     bool toggleCell(int x, int y) {
       cellStatus['$x,$y'] = !(cellStatus['$x,$y'] ?? false);
+      updateCellStatus();
       return cellStatus['$x,$y'] ?? false;
     }
 

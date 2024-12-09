@@ -20,14 +20,21 @@ class Cell extends StatefulWidget {
   State<Cell> createState() => _CellState();
 }
 
-class _CellState extends State<Cell> {
+class _CellState extends State<Cell> with SingleTickerProviderStateMixin {
   Color color = Colors.white;
   bool hoverCell = false;
+  late AnimationController _controller;
 
   @override
   initState() {
     super.initState();
     color = widget.isAlive ? Colors.green : Colors.white;
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+      reverseDuration: const Duration(milliseconds: 250),
+      value: 1,
+    );
   }
 
   @override
@@ -49,18 +56,30 @@ class _CellState extends State<Cell> {
         child: GestureDetector(
           onTap: () {
             setState(() {
-              color = widget.onTap(widget.x, widget.y) ? Colors.green : Colors.white;
+              if (widget.onTap(widget.x, widget.y)) {
+                color = Colors.green;
+                _controller.forward(from: 0);
+              } else {
+                _controller.reverse(from: 1).then((value) => color = Colors.white);
+              }
             });
           },
           child: Stack(
             children: [
-              SizedBox(
-                height: widget.size,
-                width: widget.size,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    border: Border.all(color: const Color(0xFFF3F3F3)),
-                    color: color,
+              ScaleTransition(
+                scale: CurvedAnimation(
+                  parent: _controller,
+                  curve: Curves.easeOutCirc,
+                  reverseCurve: Curves.easeOutQuint,
+                ),
+                child: SizedBox(
+                  height: widget.size,
+                  width: widget.size,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: const Color(0xFFF3F3F3)),
+                      color: color,
+                    ),
                   ),
                 ),
               ),

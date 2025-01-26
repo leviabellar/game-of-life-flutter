@@ -1,6 +1,6 @@
 # game_of_life
 
-A new Flutter project.
+A game of life using flutter
 
 ## Getting Started
 
